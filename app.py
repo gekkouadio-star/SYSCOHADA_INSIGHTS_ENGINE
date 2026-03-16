@@ -25,15 +25,27 @@ st.title("BRVM Analytics Hub - Big Data Edition")
 st.sidebar.title("Options")
 mode = st.sidebar.selectbox("Mode", ["Analyse PDF unique", "Analyse automatique BRVM"])
 
+# ------------------- FONCTION DE FORMATAGE MONÉTAIRE -------------------
+def format_fcfa(amount):
+    """
+    Formate un montant pour indiquer automatiquement FCFA, millions ou milliards.
+    """
+    if amount >= 1_000_000_000:
+        return f"{round(amount/1_000_000_000,2)} milliards FCFA"
+    elif amount >= 1_000_000:
+        return f"{round(amount/1_000_000,2)} millions FCFA"
+    else:
+        return f"{amount} FCFA"
+
 # ------------------- FONCTION DE RÉSUMÉ -------------------
 def generate_summary(data, ratios, corpus):
     """
     Génère un résumé automatique d'un rapport financier.
     """
-    summary = f"Chiffre d'affaires : {data['CA']}\n"
-    summary += f"Résultat net : {data['RN']}\n"
+    summary = f"Chiffre d'affaires : {format_fcfa(data['CA'])}\n"
+    summary += f"Résultat net : {format_fcfa(data['RN'])}\n"
     summary += f"Marge nette : {round(ratios['marge_nette'],2)} %\n"
-    summary += f"BFR : {data['BFR']}\n"
+    summary += f"BFR : {format_fcfa(data['BFR'])}\n"
     summary += f"DSO : {round(data['DSO'],1)}\n"
     summary += f"ROE : {round(ratios.get('roe',0),2)}\n"
     summary += f"Gearing : {round(ratios.get('gearing',0),2)}\n\n"
@@ -61,12 +73,14 @@ if mode == "Analyse PDF unique":
         # Analyse financière
         data = extract_finance_syscohada(text)
         ratios = compute_ratios(data)
+        corpus = [clean_text(text)]
 
+        # Affichage
         st.subheader("Analyse financière")
-        st.metric("Chiffre d'affaires", data["CA"])
-        st.metric("Résultat net", data["RN"])
+        st.metric("Chiffre d'affaires", format_fcfa(data["CA"]))
+        st.metric("Résultat net", format_fcfa(data["RN"]))
         st.metric("Marge nette (%)", round(ratios["marge_nette"], 2))
-        st.write("BFR :", data["BFR"])
+        st.write("BFR :", format_fcfa(data["BFR"]))
         st.write("DSO :", round(data["DSO"],1))
         st.write("ROE :", round(ratios.get("roe",0),2))
         st.write("Gearing :", round(ratios.get("gearing",0),2))
@@ -76,7 +90,6 @@ if mode == "Analyse PDF unique":
 
         # Analyse texte
         st.subheader("Analyse texte")
-        corpus = [clean_text(text)]
         freq = word_frequencies(pd.Series(corpus))
         st.write(freq.head(20))
 
@@ -137,9 +150,18 @@ elif mode == "Analyse automatique BRVM":
                 data = extract_finance_syscohada(text)
                 ratios = compute_ratios(data)
                 corpus = [clean_text(text)]
+                
+                # Affichage
                 st.write(data)
                 st.write(ratios)
+                
+                # Sauvegarde
                 save_financials(data, company_name="Nom société", year=2025)
+                
+                # Résumé automatique
+                st.subheader("Résumé automatique du rapport")
+                st.text(generate_summary(data, ratios, corpus))
+
         st.success("Analyse automatique terminée !")
 
 # ------------------- VISUALISATION INTERACTIVE -------------------
