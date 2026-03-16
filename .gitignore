@@ -1,0 +1,25 @@
+# Environnement virtuel
+env/
+venv/
+*.pyc
+__pycache__/
+
+# Fichiers de configuration IDE
+.vscode/
+.idea/
+
+# Fichiers temporaires Python
+*.log
+*.sqlite
+*.db
+*.DS_Store
+
+# Fichiers Streamlit
+.streamlit/
+
+# Fichiers PDF ou téléchargements temporaires
+*.pdf
+*.tmp
+
+# Requirements lock (optionnel si tu veux garder uniquement requirements.txt)
+pip-log.txt
